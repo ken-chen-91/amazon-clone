@@ -1,8 +1,23 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import "./Login.css";
 
 function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const signIn = (e) => {
+      e.preventDefault();
+
+    //   some fancy firebase login shittttttt......
+  };
+
+  const register = e => {
+      e.preventDefault();
+
+      // do some fancy firebase register shitttttttttt...
+  }
+
   return (
     <div className="login">
       <Link to="/">
@@ -18,12 +33,22 @@ function Login() {
 
         <form>
           <h5>E-mail</h5>
-          <input type="text" />
+          <input
+            value={email}
+            type="text"
+            onChange={(e) => setEmail(e.target.value)}
+          />
 
           <h5>Password</h5>
-          <input type="password" />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
 
-          <button className='login_signInButton'>Sing In</button>
+          <button type="submit" onClick={signIn} className="login_signInButton">
+            Sign In
+          </button>
         </form>
 
         <p>
@@ -32,7 +57,9 @@ function Login() {
           Interest-Based Ads Notice.
         </p>
 
-        <button className='logi_registerButton'>Create your Amazon Account</button>
+        <button onClick={register} className="logi_registerButton">
+          Create your Amazon Account
+        </button>
       </div>
     </div>
   );
