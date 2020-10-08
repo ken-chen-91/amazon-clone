@@ -1,36 +1,43 @@
-import {useStateValue} from './StateProvider'
-import React, {useEffect} from "react";
+import { useStateValue } from "./StateProvider";
+import React, { useEffect } from "react";
 import "./App.css";
 import Header from "./Header";
 import Home from "./Home";
 import Checkout from "./Checkout";
-import Login from './Login'
+import Login from "./Login";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
-import {auth} from './firebase'
+import { auth } from "./firebase";
+import Payment from "./Payment";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
+
+const promise = loadStripe(
+  "pk_test_51HZsAFHMYDjiZuz639DTSbfOtArfhZbjWbPxrphJY8DuBWhwgVzS8RHMmaKQ9jpd1WHw0vGfpbrzDY05SsFs7xju00z7T0m0x3"
+);
 
 function App() {
   const [{}, dispatch] = useStateValue();
 
-  useEffect(()=> {
+  useEffect(() => {
     // will only run once when the app component loads......
-    auth.onAuthStateChanged(authUser => {
-      console.log('THE USER IS >>> ', authUser.email)
+    auth.onAuthStateChanged((authUser) => {
+      console.log("THE USER IS >>> ", authUser.email);
 
-      if(authUser){
-        // the user just logged in  / the user was logged in 
-          dispatch({
-            type: 'SET_USER',
-            user: authUser
-          })
-      }else {
+      if (authUser) {
+        // the user just logged in  / the user was logged in
+        dispatch({
+          type: "SET_USER",
+          user: authUser,
+        });
+      } else {
         // the user is logged out
         dispatch({
-          type:'SET_USER',
-          user:null
-        })
+          type: "SET_USER",
+          user: null,
+        });
       }
-    })
-  },[])
+    });
+  }, []);
   return (
     <Router>
       <div className="App">
@@ -41,6 +48,12 @@ function App() {
           <Route path="/checkout">
             <Header />
             <Checkout />
+          </Route>
+          <Route path="/payment">
+            <Header />
+            <Elements stripe={promise}>
+              <Payment />
+            </Elements>
           </Route>
           <Route path="/">
             <Header />
