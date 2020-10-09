@@ -1,13 +1,13 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import CheckoutProduct from "./CheckoutProduct";
 import "./Payment.css";
 import { useStateValue } from "./StateProvider";
-import { Link,useHistory } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import CurrencyFormat from "react-currency-format";
 import { getBasketTotal } from "./reducer";
-import axios from 'axios'
-
+import axios from "./axios";
+import { db } from "./firebase";
 
 function Payment() {
   const [{ basket, user }, dispatch] = useStateValue();
@@ -22,20 +22,25 @@ function Payment() {
   const [disabled, setDisabled] = useState(true);
   const [clientScret, setClientSecret] = useState(true);
 
-  useEffect(() => {             // 以下是支付环节相当重要的一部节, 准确捉取客人下单的数量
-        // generate the special stripe secret which allows us to charge a customer
-        const getClientSecret = async () => {
-            const response = await axios({
-                method: 'post',
-                // Stripe expects the total in a currencies subunits
-                url:`/payments/create?total=${getBasketTotal(basket )*100}`
-            })
+  useEffect(() => {
+    // 以下是支付环节相当重要的一部节, 准确捉取客人下单的信息
+    // generate the special stripe secret which allows us to charge a customer
+    const getClientSecret = async () => {
+      const response = await axios({
+        method: "post",
+        // Stripe expects the total in a currencies subunits
+        url: `/payments/create?total=${getBasketTotal(basket) * 100}`,
+      });
 
-            setClientSecret(response.data.clientSecret)
-        }
+      setClientSecret(response.data.clientSecret);
+    };
 
-        getClientSecret();
-  },[basket])
+    getClientSecret();
+  }, [basket]);
+
+  console.log("THE SECRET IS >>>", clientScret);
+  console.log('👱', user)
+
 
   const handleSubmit = async (event) => {
     // do all the fancy stripe suff....
@@ -43,19 +48,36 @@ function Payment() {
     event.preventDefault();
     setProcessing(true);
 
-    const payload =  await stripe.confirmCardPayment(clientScret,{
-        payment_method:{
-            card: elements.getElement(CardElement)
-        }
-    }).then(({paymentIntent}) => {
+    const payload = await stripe
+      .confirmCardPayment(clientScret, {
+        payment_method: {
+          card: elements.getElement(CardElement),
+        },
+      })
+      .then(({ paymentIntent }) => {
         // paymentIntent = payment confirmation
 
-        setSucceeded (true);
-        setError(null)
-        setProcessing(false)
+        db
+          .collection("users")
+          .doc(user?.uid)
+          .collection('orders')
+          .doc(paymentIntent.id)
+          .set({
+            basket: basket,
+            amount:paymentIntent.amount,
+            created: paymentIntent.created
+          })
 
-        history.replace('/orders')
-    })
+        setSucceeded(true);
+        setError(null);
+        setProcessing(false);
+
+        dispatch({
+          type: "EMPTY_BASKET",
+        });
+
+        history.replace("/orders");
+      });
   };
 
   const handleChange = (event) => {
