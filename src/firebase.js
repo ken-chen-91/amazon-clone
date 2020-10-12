@@ -23,4 +23,4 @@ const firebaseApp = firebase.initializeApp(firebaseConfig); //连接firebase, �
 const db = firebaseApp.firestore(); //创建数据库
 const auth = firebase.auth(); //创建 firebase 的用户验证功能
 
-export { db, auth };
+export { db, auth };   
